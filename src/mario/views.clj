@@ -1,11 +1,11 @@
 (ns mario.views
-  (:use [hiccup page util]))
+  (:use [hiccup core page util]))
+
+(defn xml [& args]
+  (html (xml-declaration "utf-8") args))
 
 (defn index-page []
-  (html5
-    [:head [:title "Compojure Fun"]]
-    [:body
-     [:h1 (escape-html (str "Fun with Clojure and Compojure"))]
-     [:a {:href "/<script>"} "Escaped HTML"]
-     ]))
+  (xml
+    [:Projects
+     [:Project {:name "My Project"}]]))
 
