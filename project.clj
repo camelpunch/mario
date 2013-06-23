@@ -7,7 +7,7 @@
   :plugins [[lein-ring "0.8.5"]
             [lein-expectations "0.0.7"]
             [lein-autoexpect "0.2.5"]]
-  :ring {:handler mario.handler/app}
+  :ring {:handler mario.routes/app}
   :profiles
   {:dev {:dependencies [[ring-mock "0.1.5"]
                         [expectations "1.4.38"]]}})
