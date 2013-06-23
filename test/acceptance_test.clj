@@ -5,21 +5,24 @@
         mario.routes)
   (:require clojure.xml))
 
+(defn GET [path] (app (request :get path)))
+(defn PUT [path body-contents] (app (body
+                                      (request :put path)
+                                      body-contents)))
+
 (defn string-to-stream [string]
   (ByteArrayInputStream. (.getBytes (.trim string))))
 
 (defn parsed-xml [string]
   (clojure.xml/parse (string-to-stream string)))
 
-(defn body-from-get [path]
-  (:body (app (request :get "/"))))
+(defn projects []
+  (map :attrs (:content (parsed-xml (:body (GET "/cc.xml"))))))
 
-(defn ccmenu-from-get [path]
-  (parsed-xml (body-from-get path)))
-
-(defn projects-from-get [path]
-  (:content (ccmenu-from-get path)))
-
-(expect 200 (:status (app (request :get "/"))))
-(expect "My Project" (:name (:attrs (first (projects-from-get "/")))))
+;; can get current state of a project from CCTray XML
+(expect 200 (:status (GET "/cc.xml")))
+(expect ["My Project"] (map :name (projects)))
+(expect "Sleeping" (:activity (first (projects))))
+(expect "complete" (:lastBuildStatus (first (projects))))
+(expect "2012-12-16T20:06:51-08:00" (:lastBuildTime (first (projects))))
 
