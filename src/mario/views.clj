@@ -7,9 +7,13 @@
 (defn cctray []
   (xml
     [:Projects
-     [:Project {:name "My Project"
+     [:Project {:name "Successful Project"
                 :activity "Sleeping"
-                :lastBuildStatus "complete"
+                :lastBuildStatus "Success"
+                :lastBuildTime "2012-12-16T20:06:51-08:00"}]
+     [:Project {:name "Failing Project"
+                :activity "Sleeping"
+                :lastBuildStatus ""
                 :lastBuildTime "2012-12-16T20:06:51-08:00"}]
      ]))
 
