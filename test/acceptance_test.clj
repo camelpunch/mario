@@ -1,37 +1,39 @@
 (ns acceptance-test
   (:import java.io.ByteArrayInputStream)
-  (:use expectations
-        ring.mock.request
-        mario.routes)
-  (:require clojure.xml))
+  (:require [clojure.xml :as xml]
+            [expectations :refer :all]
+            [ring.mock.request :as r]
+            [mario.routes :refer [app]]))
 
-(defn GET [path] (app (request :get path)))
-(defn POST [path] (app (request :post path)))
-(defn PUT [path] (app (request :put path)))
+(defn GET [path] (app (r/request :get path)))
+(defn POST [path] (app (r/request :post path)))
+(defn PUT [path & [body]] (app (-> (r/request :put path) (r/body body))))
 
 (defn parsed-xml [string]
-  (-> string .trim .getBytes ByteArrayInputStream. clojure.xml/parse))
+  (->> string .trim .getBytes ByteArrayInputStream. xml/parse))
 
 (defn projects []
-  (map :attrs (-> (GET "/cc.xml") :body parsed-xml :content)))
+  (->> (GET "/cc.xml") :body parsed-xml :content (map :attrs)))
 
-(defn project [project-name]
+(defn project-status [project-name]
   (first (filter #(= project-name (:name %)) (projects))))
 
-;; can get current state of a project from CCTray XML
+;; XML feed works
 (expect 200 (:status (GET "/cc.xml")))
-(expect "Sleeping" (:activity (project "Successful Project")))
-(expect "Success" (:lastBuildStatus (project "Successful Project")))
-(expect "2012-12-16T20:06:51-08:00" (:lastBuildTime (project "Successful Project")))
 
-;; triggering a build gives 201 (it's created, but not finished)
-(expect 201 (:status (POST "/jobs/failing-project/builds")))
+;; can get current state of a project from CCTray XML
+(expect {:activity "Sleeping"
+         :lastBuildStatus "Success"
+         :lastBuildTime "2012-12-16T20:06:51-08:00"}
+        (in (project-status "Successful Project")))
 
-;; triggering build of a project that fails
-(expect "Sleeping" (:activity (project "Failing Project")))
+;; triggering a build puts job into Building state
+;(expect {:activity "Building"
+         ;:lastBuildStatus "Unknown"}
+        ;(in (do
+              ;(PUT "/jobs/trigger-project" {:name "Trigger Project"})
+              ;(POST "/jobs/trigger-project/builds")
+              ;(project-status "Trigger Project"))))
 
-(def requested-build (POST "/jobs/failing-project/builds"))
-(def build-url (get (:headers requested-build) "Location"))
-(expect 201 (:status requested-build))
-(expect #"/jobs/failing-project/builds/[^/]+" build-url)
-
+;; when someone tells mario that the build completed but failed
+;; then the job is a sleeping failure
