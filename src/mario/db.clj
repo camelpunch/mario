@@ -2,22 +2,40 @@
   (:require [datomic.api :as d]
             [environ.core :refer :all]))
 
-(d/create-database (env :db-uri))
-(def conn (d/connect (env :db-uri)))
-
+(def uri (env :db-uri))
 (def schema-tx (read-string (slurp "db/schema.dtm")))
-@(d/transact conn schema-tx)
 
-(defn name-job [slug name]
-  @(d/transact conn [{:db/id #db/id[:db.part/db -1000001]
-                      :job/name name
-                      :job/slug slug}]))
+(defn init-db []
+  (when (d/create-database uri)
+    (let [conn (d/connect uri)]
+      @(d/transact conn schema-tx))))
 
-(defn job [slug]
-  (let [db (d/db conn)]
+(defn name-job [s]
+  (init-db)
+  (let [conn (d/connect uri)]
+    @(d/transact conn [[:db/add #db/id[:db.part/user] :job/name s]])))
+
+(defn build-started [build-name]
+  (init-db)
+  (let [conn (d/connect uri)]
+    @(d/transact conn [[:db/add #db/id[:db.part/user] :build/name build-name]])))
+
+(defn item [k v]
+  "Retrieves an entity from the database by a given key and value"
+  (let [conn (d/connect uri)
+        database (d/db conn)]
+    (->>(d/q `[:find ~'?e
+               :in ~'$ ~'?search-value
+               :where [~'?e ~k ~'?search-value]]
+             database v)
+             ffirst
+             (d/entity database))))
+
+(defn all-jobs []
+  (let [conn (d/connect uri)
+        database (d/db conn)]
     (->>(d/q '[:find ?e
-               :in $ ?search-slug
-               :where [?e :job/slug ?search-slug]]
-             db slug)
-             ffirst (d/entity db))))
+               :where [?e :job/name]]
+             database)
+             (map #(d/entity database (first %))))))
 

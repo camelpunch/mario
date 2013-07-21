@@ -5,6 +5,7 @@
                  [compojure "1.1.5"]
                  [hiccup "1.0.3"]
                  [com.datomic/datomic-free "0.8.4020"]
+                 [clj-time "0.5.1"]
                  [environ "0.4.0"]]
   :plugins [[lein-ring "0.8.5"]
             [lein-expectations "0.0.7"]

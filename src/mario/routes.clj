@@ -1,12 +1,11 @@
 (ns mario.routes
-  (:use compojure.core)
-  (:require [compojure.handler :as handler]
+  (:require [compojure.core :refer :all]
+            [compojure.handler :as handler]
             [compojure.route :as route]
-            [mario.views :as views]
             [mario.actions :as actions]))
 
 (defroutes app-routes
-  (GET "/cc.xml" [] (views/cctray))
+  (GET "/cc.xml" [] (actions/cctray))
   (PUT "/jobs/:slug" [slug] (actions/create-job slug))
   (POST "/jobs/:job-id/builds"
         [job-id]
