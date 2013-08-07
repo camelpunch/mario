@@ -1,41 +1,60 @@
 (ns mario.db
   (:require [datomic.api :as d]
-            [environ.core :refer :all]))
+            [environ.core :refer [env]]))
 
-(def uri (env :db-uri))
-(def schema-tx (read-string (slurp "db/schema.dtm")))
+(def ^:private uri (env :db-uri))
+(def ^:private schema-tx (read-string (slurp "db/schema.dtm")))
 
-(defn init-db []
+(def ^:private query-job
+  '[:find ?job
+    :in $ ?job-name
+    :where [?job :job/name ?job-name]])
+
+(defn- init-db []
   (when (d/create-database uri)
     (let [conn (d/connect uri)]
       @(d/transact conn schema-tx))))
 
-(defn name-job [s]
+; (defn- database []
+;   (init-db)
+;   (let [conn (d/connect uri)]
+;     (d/db conn)))
+
+(defn add [value attr]
   (init-db)
   (let [conn (d/connect uri)]
-    @(d/transact conn [[:db/add #db/id[:db.part/user] :job/name s]])))
+    @(d/transact conn [[:db/add #db/id[:db.part/user] attr value]])))
 
-(defn build-started [build-name]
+(defn job [job-name]
   (init-db)
-  (let [conn (d/connect uri)]
-    @(d/transact conn [[:db/add #db/id[:db.part/user] :build/name build-name]])))
+  (let [database (d/db (d/connect uri))]
+    (when-let [job (d/entity database
+                             (ffirst (d/q query-job database job-name)))]
+      (d/touch job))))
 
-(defn item [k v]
-  "Retrieves an entity from the database by a given key and value"
+(defn build-started [job-name build-name]
+  "Ties a new build to a job"
+  (init-db)
   (let [conn (d/connect uri)
-        database (d/db conn)]
-    (->>(d/q `[:find ~'?e
-               :in ~'$ ~'?search-value
-               :where [~'?e ~k ~'?search-value]]
-             database v)
-             ffirst
-             (d/entity database))))
+        job-id (:db/id (job job-name))]
+    @(d/transact conn [{:db/id job-id
+                        :job/builds [{:build/name build-name}]}])))
+
+(defn- job-build [job build-name]
+  (first (filter #(= build-name (:build/name %)) (:job/builds job))))
+
+(defn build-failed [job-name build-name]
+  "Adds a failure result to a build"
+  (init-db)
+  (when-let [build-id (:db/id (job-build (job job-name) build-name))]
+    @(d/transact (d/connect uri) [{:db/id build-id
+                                   :build/result "failure"}])))
 
 (defn all-jobs []
-  (let [conn (d/connect uri)
-        database (d/db conn)]
-    (->>(d/q '[:find ?e
-               :where [?e :job/name]]
-             database)
-             (map #(d/entity database (first %))))))
+  (init-db)
+  (let [database (d/db (d/connect uri))]
+    (map #(d/touch (d/entity database (first %)))
+         (d/q '[:find ?job
+                :where [?job :job/name]]
+              database))))
 

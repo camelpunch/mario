@@ -1,23 +1,40 @@
 (ns db-test
   (:require [expectations :refer :all]
             [clojure.set :refer :all]
-            [mario.db :as db]
+            [mario.db :refer :all]
+            [datomic.api :as d]
             [test-helpers :as t]
             [clj-time.core :as ctime]))
 
-(db/init-db)
+(defn job-uuids [] (repeat (doto (t/uuid) (add :job/name))))
 
 ;; naming allows finding
-(expect-let [somename (doto (t/uuid) db/name-job)]
-            somename (->> (db/item :job/name somename) :job/name))
+(expect-let [uuid (first (job-uuids))]
+            uuid (:job/name (job uuid)))
 
 ;; and finding all
-(expect-let [name1 (doto (t/uuid) db/name-job)
-             name2 (doto (t/uuid) db/name-job)
-             all-names (->> (db/all-jobs) (map :job/name) set)]
-            true (subset? #{name1 name2} all-names))
+(expect-let [uuid (first (job-uuids))]
+            uuid (in (map :job/name (all-jobs))))
 
-;; can add a build to a job id (even if it doesn't exist)
-(expect-let [buildname (doto (t/uuid) db/build-started)]
-            buildname (->> (db/item :build/name buildname) :build/name))
+;; we get nil when finding a name that doesn't exist
+(expect nil (job "nonexistent"))
 
+;; can add a build to a job
+(expect-let [uuid (first (job-uuids))]
+            "first-build"
+            (in (do
+                  (build-started uuid "first-build")
+                  (map :build/name (:job/builds (job uuid))))))
+
+;; can notify about build failure and retrieve the failure
+(expect-let [uuid (first (job-uuids))]
+            ["failure"] (do
+                          (build-started uuid "doomed-build")
+                          (build-failed uuid "doomed-build")
+                          (map :build/result (:job/builds (job uuid)))))
+
+;; we get nil when failing a non-existent job
+(expect nil (build-failed "nonexistentjob" "nonexistentbuild"))
+
+;; or a non-existent build
+(expect nil (build-failed (first (job-uuids)) "nonexistentbuild"))
