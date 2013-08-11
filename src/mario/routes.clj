@@ -1,10 +1,15 @@
 (ns mario.routes
   (:require [compojure.core :refer :all]
-            [compojure.handler :as handler]
+            [compojure.handler :refer [site]]
             [compojure.route :as route]
-            [mario.actions :as actions]))
+            [clojure.java.io :as io]
+            [ring.middleware.stacktrace :as trace]
+            [ring.middleware.session.cookie :as cookie]
+            [ring.adapter.jetty :as jetty]
+            [mario.actions :as actions]
+            [environ.core :refer [env]]))
 
-(defroutes app-routes
+(defroutes app
   (GET "/cc.xml" [] (actions/cctray))
 
   (PUT "/jobs/:job-name" [job-name] (actions/create-job job-name))
@@ -19,4 +24,22 @@
 
   (route/not-found "Not Found"))
 
-(def app (handler/site app-routes))
+(defn wrap-error-page [handler]
+  (fn [req]
+    (try (handler req)
+         (catch Exception e
+           {:status 500
+            :headers {"Content-Type" "text/html"}
+            :body (slurp (io/resource "500.html"))}))))
+
+(defn -main [& [port]]
+  (let [port (Integer. (or port (env :port) 5000))
+        ;; TODO: heroku config:add SESSION_SECRET=$RANDOM_16_CHARS
+        store (cookie/cookie-store {:key (env :session-secret)})]
+    (jetty/run-jetty (-> #'app
+                         ((if (env :production)
+                            wrap-error-page
+                            trace/wrap-stacktrace))
+                         (site {:session {:store store}}))
+                     {:port port :join? false})))
+
