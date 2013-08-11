@@ -12,8 +12,8 @@
 
 (def ^:private uuid-pattern "[a-f0-9-]{36}")
 
-;; Creating a job with a name 200s
-(expect {:status 200} (actions/create-job (t/uuid)))
+;; Creating a job with a name 204s
+(expect {:status 204} (actions/create-job (t/uuid)))
 
 ;; Building
 
@@ -40,10 +40,10 @@
 
 ;; Build failure
 
-;; 200s when build exists
+;; 204s when build exists
 (expect-let [job-name (doto (t/uuid) actions/create-job)
              build-name (build-name-from-response (actions/build job-name))]
-            {:status 200} (actions/build-failed job-name build-name))
+            {:status 204} (actions/build-failed job-name build-name))
 
 ;; …and 'changes' state of the job
 (expect-let

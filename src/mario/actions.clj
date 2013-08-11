@@ -9,7 +9,7 @@
 
 (defn create-job [job-name]
   (db/add job-name :job/name)
-  {:status 200})
+  {:status 204})
 
 (defn build [job-name]
   (if-let [job (db/job job-name)]
@@ -21,4 +21,4 @@
 
 (defn build-failed [job-name build-name]
   (let [result (db/build-failed job-name build-name)]
-    {:status (if result 200 404)}))
+    {:status (if result 204 404)}))
