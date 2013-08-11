@@ -17,11 +17,12 @@
             [lein-autoexpect "0.2.5"]
             [lein-environ "0.4.0"]]
   :ring {:handler mario.routes/app}
-  :profiles {:production {:env {:production true}}
+  :profiles {:production {:env {:site-base-uri "http://radiant-brushlands-8876.herokuapp.com"
+                                :db-uri "datomic:mem://mario"
+                                :production true}}
              :dev {:env {:site-base-uri "http://localhost:3000"
                          ; :db-uri "datomic:free://localhost:4334/mario"
-                         :db-uri "datomic:mem://mario"
-                         :projects-config "test/config.edn"}
+                         :db-uri "datomic:mem://mario"}
                    :dependencies [[ring-mock "0.1.5"]
                                   [expectations "1.4.38"]]}}
   :uberjar-name "mario-standalone.jar")
