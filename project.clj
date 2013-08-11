@@ -4,7 +4,7 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [compojure "1.1.5"]
                  [hiccup "1.0.3"]
-                 [com.datomic/datomic-free "0.8.4020"]
+                 [com.datomic/datomic-free "0.8.4122"]
                  [clj-time "0.5.1"]
                  [environ "0.4.0"]]
   :plugins [[lein-ring "0.8.5"]
