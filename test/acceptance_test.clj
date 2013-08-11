@@ -17,7 +17,7 @@
 
 ;; triggering a build puts job into Building state
 (expect-let [job-name (doto (t/uuid)
-                        (#(PUT (str "/jobs/" %) {:name %}))
+                        (#(PUT (str "/jobs/" %)))
                         (#(POST (str "/jobs/" % "/builds"))))]
             {:activity "Building"
              :lastBuildStatus "Unknown"}

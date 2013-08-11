@@ -7,15 +7,15 @@
 (defroutes app-routes
   (GET "/cc.xml" [] (actions/cctray))
 
-  (PUT "/jobs/:slug" [slug] (actions/create-job slug))
+  (PUT "/jobs/:job-name" [job-name] (actions/create-job job-name))
 
-  (POST "/jobs/:job-id/builds"
-        [job-id]
-        (actions/build job-id))
+  (POST "/jobs/:job-name/builds"
+        [job-name]
+        (actions/build job-name))
 
-  (PUT "/jobs/:job-id/builds/:build-id/failure"
-       [job-id build-id]
-       (actions/build-failed job-id build-id))
+  (PUT "/jobs/:job-name/builds/:build-name/failure"
+       [job-name build-name]
+       (actions/build-failed job-name build-name))
 
   (route/not-found "Not Found"))
 

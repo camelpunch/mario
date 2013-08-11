@@ -4,7 +4,6 @@
 
 (def ^:private uri (env :db-uri))
 (def ^:private schema-tx (read-string (slurp "db/schema.dtm")))
-
 (def ^:private query-job
   '[:find ?job
     :in $ ?job-name
@@ -14,11 +13,6 @@
   (when (d/create-database uri)
     (let [conn (d/connect uri)]
       @(d/transact conn schema-tx))))
-
-; (defn- database []
-;   (init-db)
-;   (let [conn (d/connect uri)]
-;     (d/db conn)))
 
 (defn add [value attr]
   (init-db)

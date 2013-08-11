@@ -10,7 +10,7 @@
         activity (if result "sleeping" "building")]
     [:Project {:name (:job/name job)
                :activity (capitalize activity)
-               :lastBuildStatus (capitalize (or result "Unknown"))}]))
+               :lastBuildStatus (capitalize (or result "unknown"))}]))
 
 (defn cctray [jobs] (xml [:Projects (map ccproject jobs)]))
 
