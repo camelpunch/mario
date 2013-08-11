@@ -12,8 +12,9 @@
             [lein-autoexpect "0.2.5"]
             [lein-environ "0.4.0"]]
   :ring {:handler mario.routes/app}
-  :profiles {:dev {:env {:db-uri "datomic:mem://mario"
-                         :site-base-uri "http://localhost:3000"
+  :profiles {:dev {:env {:site-base-uri "http://localhost:3000"
+                         ; :db-uri "datomic:free://localhost:4334/mario"
+                         :db-uri "datomic:mem://mario"
                          :projects-config "test/config.edn"}
                    :dependencies [[ring-mock "0.1.5"]
                                   [expectations "1.4.38"]]}})

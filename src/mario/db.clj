@@ -1,18 +1,14 @@
 (ns mario.db
   (:require [datomic.api :as d]
-            [environ.core :refer [env]]))
+            [environ.core :refer [env]]
+            [mario.query :as query]))
 
 (def ^:private uri (env :db-uri))
 (def ^:private schema-tx (read-string (slurp "db/schema.dtm")))
-(def ^:private query-job
-  '[:find ?job
-    :in $ ?job-name
-    :where [?job :job/name ?job-name]])
 
 (defn- init-db []
   (when (d/create-database uri)
-    (let [conn (d/connect uri)]
-      @(d/transact conn schema-tx))))
+    @(d/transact (d/connect uri) schema-tx)))
 
 (defn add [value attr]
   (init-db)
@@ -22,8 +18,8 @@
 (defn job [job-name]
   (init-db)
   (let [database (d/db (d/connect uri))]
-    (when-let [job (d/entity database
-                             (ffirst (d/q query-job database job-name)))]
+    (when-let [job (d/entity
+                     database (ffirst (d/q query/job-by-name database job-name)))]
       (d/touch job))))
 
 (defn build-started [job-name build-name]
@@ -48,7 +44,5 @@
   (init-db)
   (let [database (d/db (d/connect uri))]
     (map #(d/touch (d/entity database (first %)))
-         (d/q '[:find ?job
-                :where [?job :job/name]]
-              database))))
+         (d/q query/all-jobs database))))
 

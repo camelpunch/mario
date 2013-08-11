@@ -20,5 +20,5 @@
     {:status 404}))
 
 (defn build-failed [job-name build-name]
-  (let [result (db/build-failed job-name build-name)]
-    {:status (if result 204 404)}))
+  (let [success (db/build-failed job-name build-name)]
+    {:status (if success 204 404)}))
