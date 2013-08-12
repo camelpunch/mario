@@ -4,6 +4,14 @@
 
 (def ^:private base-uri (env :site-base-uri))
 
-(defn build [job-name build-name]
-  (join "/" [base-uri "jobs" job-name "builds" build-name]))
+(defn job-path
+  ([job-name] (join "/" [nil "jobs" job-name]))
+  ([base job-name] (join "/" [base "jobs" job-name])))
+
+(defn builds-path [& args]
+  (join "/" [(apply job-path args) "builds"]))
+
+(defn build-url [job-name build-name]
+  (join "/" [(builds-path base-uri job-name) build-name]))
+
 

@@ -1,7 +1,7 @@
 (ns actions-test
   (:require [expectations :refer :all]
             [test-helpers :as t]
-            [mario.url-helpers :as url]
+            [mario.url-helpers :as u]
             [mario.actions :as actions]
             [clojure.string :refer [split]]))
 
@@ -23,7 +23,7 @@
 
 ;; …and returns a location header for the new build
 (expect-let [job-name (doto (t/uuid) actions/create-job)]
-            (re-pattern (url/build job-name uuid-pattern))
+            (re-pattern (u/build-url job-name uuid-pattern))
             (location-header (actions/build job-name)))
 
 ;; …and job shows up in feed
