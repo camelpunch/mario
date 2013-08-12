@@ -10,9 +10,13 @@
   :plugins [[lein-ring "0.8.5"]
             [lein-expectations "0.0.7"]
             [lein-autoexpect "0.2.5"]
-            [lein-environ "0.4.0"]]
+            [lein-environ "0.4.0"]
+            [lein-datomic "0.2.0"]]
   :ring {:handler mario.routes/app}
-  :profiles {:dev {:env {:site-base-uri "http://localhost:3000"
+  :datomic {:schemas ["resources/schema" ["schema.edn"]]}
+  :profiles {:dev {:datomic {:config "resources/free-transactor-template.properties"
+                             :db-uri "datomic:mem://mario"}
+                   :env {:site-base-uri "http://localhost:3000"
                          ; :db-uri "datomic:free://localhost:4334/mario"
                          :db-uri "datomic:mem://mario"
                          :projects-config "test/config.edn"}

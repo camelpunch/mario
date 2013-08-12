@@ -2,10 +2,13 @@
   (:require [datomic.api :as d]
             [environ.core :refer [env]]))
 
-(defn clear-database
-  "clears the database before each run"
+(def ^:private uri (env :db-uri))
+(def ^:private schema-tx (read-string (slurp "resources/schema/schema.edn")))
+
+(defn init-and-clear-database
   {:expectations-options :before-run}
   []
-  (d/delete-database (env :db-uri)))
-
+  (d/delete-database uri)
+  (d/create-database uri)
+  (d/transact (d/connect uri) schema-tx))
 
