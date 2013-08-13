@@ -14,15 +14,13 @@
             [lein-datomic "0.2.0"]]
   :ring {:handler mario.routes/app}
   :datomic {:schemas ["resources/schema" ["schema.edn"]]}
-  :profiles {:preview {:datomic {:config "resources/free-transactor-template.properties"
-                                 :db-uri "datomic:free://localhost:4334/mario"}
-                       :env {:site-base-uri "http://localhost:3000"
-                             :db-uri "datomic:free://localhost:4334/mario"
-                             :projects-config "test/config.edn"}}
-             :dev {:datomic {:config "resources/free-transactor-template.properties"
+  :profiles {:dev {:datomic {:config "resources/free-transactor-template.properties"
                              :db-uri "datomic:free://localhost:4334/mario"}
                    :env {:site-base-uri "http://localhost:3000"
-                         :db-uri "datomic:mem://mario"
-                         :projects-config "test/config.edn"}
-                   :dependencies [[ring-mock "0.1.5"]
-                                  [expectations "1.4.38"]]}})
+                         :db-uri "datomic:free://localhost:4334/mario"
+                         :projects-config "test/config.edn"}}
+             :test {:env {:site-base-uri "http://localhost:3000"
+                          :db-uri "datomic:mem://mario"
+                          :projects-config "test/config.edn"}
+                    :dependencies [[ring-mock "0.1.5"]
+                                   [expectations "1.4.38"]]}})
