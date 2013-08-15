@@ -5,6 +5,7 @@
             [mario.actions :as actions]))
 
 (defroutes app-routes
+  (GET "/" [] (actions/cctray))
   (GET "/cc.xml" [] (actions/cctray))
 
   (PUT "/jobs/:job-name" [job-name] (actions/create-job job-name))
