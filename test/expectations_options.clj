@@ -1,8 +1,6 @@
-(ns expectations-options
-  (:require [environ.core :refer [env]]
-            [mario.db :refer [wipe]]))
+(ns expectations-options)
 
 (defn init-and-clear-database
   {:expectations-options :before-run}
-  [] (wipe))
+  [] (mario.db/wipe))
 
