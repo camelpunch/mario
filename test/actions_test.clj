@@ -10,8 +10,6 @@
 (defn- build-name-from-response [response]
   (last (split (location-header response) #"/")))
 
-(def ^:private uuid-pattern "[a-f0-9-]{36}")
-
 ;; Creating a job with a name 204s
 (expect {:status 204} (actions/create-job (t/uuid)))
 
@@ -23,7 +21,7 @@
 
 ;; …and returns a location header for the new build
 (expect-let [job-name (doto (t/uuid) actions/create-job)]
-            (re-pattern (u/build-url job-name uuid-pattern))
+            (re-pattern (u/build-url job-name "\\d+"))
             (location-header (actions/build job-name)))
 
 ;; …and job shows up in feed
@@ -57,9 +55,9 @@
   (t/project-status (projects) job-name))
 
 ;; …but 404s when job doesn't exist
-(expect {:status 404} (actions/build-failed "nosuchjob" "nosuchbuild"))
+(expect {:status 404} (actions/build-failed "nosuchjob" "0"))
 
 ;; …and 404s when build doesn't exist
 (expect-let [job-name (doto (t/uuid) actions/create-job)]
-            {:status 404} (actions/build-failed job-name "nosuchbuild"))
+            {:status 404} (actions/build-failed job-name "3"))
 

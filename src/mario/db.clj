@@ -1,37 +1,35 @@
 (ns mario.db
-  (:require [datomic.api :as d]
-            [environ.core :refer [env]]
-            [mario.query :as query]))
+  (:require [environ.core :refer [env]]
+            [taoensso.carmine :as car :refer [wcar]]))
 
-(def ^:private uri (env :db-uri))
+(def server1-conn {:pool {} :spec (env :redis)})
+(defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
 
-(defn add [value attr]
-  "Add arbitrary attribute and value"
-  (let [conn (d/connect uri)]
-    (d/transact conn [[:db/add #db/id[:db.part/user] attr value]])))
+(defn wipe [] (wcar* (car/flushdb)))
+
+(defn add-job [job-name]
+  (wcar* (car/hmset "jobs" job-name {:job/name job-name
+                                     :job/builds []})))
 
 (defn job [job-name]
   "Returns a job by name"
-  (let [database (d/db (d/connect uri))]
-    (d/entity database (ffirst (d/q query/job-by-name database job-name)))))
+  (first (wcar* (car/hmget "jobs" job-name))))
 
 (defn all-jobs []
-  (let [database (d/db (d/connect uri))]
-    (map #(d/entity database (first %)) (d/q query/all-jobs database))))
+  (take-nth 2 (next (wcar* (car/hgetall "jobs")))))
 
-(defn build-started [job-name build-name]
-  "Ties a new build to a job"
-  (d/transact (d/connect uri)
-              [{:db/id (:db/id (job job-name))
-                :job/builds [{:build/name build-name}]}]))
+(defn- next-id-for [key] (wcar* (car/incr (str "id." key))))
 
-(defn- build-from-names [job-name build-name]
-  (first (filter #(= build-name (:build/name %))
-                 (:job/builds (job job-name)))))
+(defn build-started [job-name]
+  (let [job (job job-name)]
+    (wcar*
+      (car/hmset "jobs" job-name (merge job {:job/builds [{:build/name 1}]})))
+    1))
 
-(defn build-failed [job-name build-name]
-  "Adds a failure result to a build"
-  (when-let [build-id (:db/id (build-from-names job-name build-name))]
-    (d/transact (d/connect uri) [{:db/id build-id
-                                  :build/result "failure"}])))
+(defn build-failed [job-name build]
+  (if-let [job (job job-name)]
+    (if (>= (count (:job/builds job)) (Integer. build))
+      (wcar*
+        (car/hmset "jobs" job-name (merge job {:job/builds [{:build/name 1
+                                                             :build/result "failure"}]}))))))
 
