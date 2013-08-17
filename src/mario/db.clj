@@ -26,10 +26,10 @@
       (car/hmset "jobs" job-name (merge job {:job/builds [{:build/name 1}]})))
     1))
 
-(defn build-failed [job-name build]
+(defn build-status [job-name build status]
   (if-let [job (job job-name)]
     (if (>= (count (:job/builds job)) (Integer. build))
       (wcar*
         (car/hmset "jobs" job-name (merge job {:job/builds [{:build/name 1
-                                                             :build/result "failure"}]}))))))
+                                                             :build/result status}]}))))))
 

@@ -14,6 +14,10 @@
         [job-name]
         (actions/build job-name))
 
+  (PUT "/jobs/:job-name/builds/:build-name/success"
+       [job-name build-name]
+       (actions/build-succeeded job-name build-name))
+
   (PUT "/jobs/:job-name/builds/:build-name/failure"
        [job-name build-name]
        (actions/build-failed job-name build-name))

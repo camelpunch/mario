@@ -49,8 +49,26 @@
         (in (let [job-name (doto (t/uuid) (#(PUT (u/job-path %))))
                   build-url (location-from-response
                               (POST (u/builds-path job-name)))]
-              (do (PUT (str build-url "/failure"))
-                  (t/project-status (projects) job-name)))))
+              (PUT (str build-url "/failure"))
+              (t/project-status (projects) job-name))))
+
+;; making a build succeed
+(expect {:status 204}
+        (in (let [job-name (doto (t/uuid)
+                             (#(PUT (u/job-path %))))
+                  build-url (location-from-response
+                              (POST (u/builds-path job-name)))]
+              (PUT (str build-url "/success")))))
+
+;; a new build for a job can succeed after a previous fail
+(expect {:activity "Sleeping"
+         :lastBuildStatus "Success"}
+        (in (let [job-name (doto (t/uuid) (#(PUT (u/job-path %))))
+                  build-url (location-from-response
+                              (POST (u/builds-path job-name)))]
+              (PUT (str build-url "/failure"))
+              (PUT (str build-url "/success"))
+              (t/project-status (projects) job-name))))
 
 ;; building a non-existent job 404s
 (expect {:status 404} (in (POST (u/builds-url "poopants"))))

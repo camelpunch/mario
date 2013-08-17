@@ -24,25 +24,25 @@
           (build-started uuid)
           (first (:job/builds (job uuid)))))
 
-;; can notify about build failure and retrieve the failure from single job
+;; can notify about build status and retrieve the status from single job
 (expect {:build/name 1
-         :build/result "failure"}
+         :build/result "some-status"}
         (let [uuid (first (job-uuids))
-              build-id (build-started uuid)]
-          (build-failed uuid (str build-id))
+              build-id (str (build-started uuid))]
+          (build-status uuid build-id "some-status")
           (last (:job/builds (job uuid)))))
 
 ;; or from all jobs
 (expect "failure"
         (let [uuid (first (job-uuids))
               build-id (build-started uuid)]
-          (build-failed uuid build-id)
+          (build-status uuid build-id "failure")
           (:build/result (first (:job/builds
                                   (first
                                     (filter #(= uuid (:job/name %)) (all-jobs))))))))
 
-;; we get nil when failing a non-existent job
-(expect nil (build-failed "nonexistentjob" 0))
+;; we get nil when changing status of a non-existent job
+(expect nil (build-status "nonexistentjob" 0 "great-status"))
 
 ;; or a non-existent build
-(expect nil (build-failed (first (job-uuids)) 999999))
+(expect nil (build-status (first (job-uuids)) 999999 "ace-status"))

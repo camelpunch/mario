@@ -15,6 +15,10 @@
        :headers {"Location" (u/build-url job-name build-name)}})
     {:status 404}))
 
+(defn build-succeeded [job-name build-name]
+  (let [successful-write (db/build-status job-name build-name "success")]
+    {:status (if successful-write 204 404)}))
+
 (defn build-failed [job-name build-name]
-  (let [successful-write (db/build-failed job-name build-name)]
+  (let [successful-write (db/build-status job-name build-name "failure")]
     {:status (if successful-write 204 404)}))
