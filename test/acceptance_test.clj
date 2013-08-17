@@ -13,30 +13,52 @@
 (defn- location-from-response [response]
   (s/replace ((response :headers) "Location") #"http://[^/]+/" "/"))
 
-;; CCTray XML feed 200s
+;; CCTray XML
 (expect {:status 200} (in (GET "/cc.xml")))
 
-;; and shows created jobs in the feed
-(expect-let [job-name (doto (t/uuid)
-                        (#(PUT (u/job-path %))))]
-            {:activity "Sleeping"
-             :lastBuildStatus "Unknown"}
-            (in (t/project-status (projects) job-name)))
+;; shows created jobs in the feed
+(expect {:activity "Sleeping"
+         :lastBuildStatus "Unknown"}
+        (in (let [job-name (doto (t/uuid) (#(PUT (u/job-path %))))]
+              (t/project-status (projects) job-name))))
 
-;; triggering a build puts job into Building state
-(expect-let [job-name (doto (t/uuid)
-                        (#(PUT (u/job-path %)))
-                        (#(POST (u/builds-path %))))]
-            {:activity "Building"
-             :lastBuildStatus "Unknown"}
-            (in (t/project-status (projects) job-name)))
+;; creating a job 204s
+(expect {:status 204} (in (PUT (u/job-path (t/uuid)))))
 
-;; job is a Sleeping Failure when build completed but failed
-(expect-let [job-name (doto (t/uuid)
-                        (#(PUT (u/job-path %))))
-             build-path (location-from-response
-                          (POST (u/builds-path job-name)))]
-            {:activity "Sleeping"
-             :lastBuildStatus "Failure"}
-            (in (do (PUT (str build-path "/failure"))
-                    (t/project-status (projects) job-name))))
+;; triggering a build
+(expect {:status 201}
+        (in (POST (u/builds-path (doto (t/uuid) (#(PUT (u/job-path %))))))))
+
+(expect {:activity "Building"
+         :lastBuildStatus "Unknown"}
+        (in (let [job-name (t/uuid)]
+              (PUT (u/job-path job-name))
+              (POST (u/builds-path job-name))
+              (t/project-status (projects) job-name))))
+
+;; failing a build
+(expect {:status 204}
+        (in (let [job-name (doto (t/uuid)
+                             (#(PUT (u/job-path %))))
+                  build-url (location-from-response
+                              (POST (u/builds-path job-name)))]
+              (PUT (str build-url "/failure")))))
+
+(expect {:activity "Sleeping"
+         :lastBuildStatus "Failure"}
+        (in (let [job-name (doto (t/uuid) (#(PUT (u/job-path %))))
+                  build-url (location-from-response
+                              (POST (u/builds-path job-name)))]
+              (do (PUT (str build-url "/failure"))
+                  (t/project-status (projects) job-name)))))
+
+;; building a non-existent job 404s
+(expect {:status 404} (in (POST (u/builds-url "poopants"))))
+
+;; failing a non-existent job 404s
+(expect {:status 404} (in (PUT (u/build-failure-url "poopants" 1))))
+
+;; failing a non-existent build 404s
+(expect {:status 404}
+        (in (let [job-name (doto (t/uuid) (#(PUT (u/job-path %))))]
+              (PUT (u/build-failure-url job-name 999)))))

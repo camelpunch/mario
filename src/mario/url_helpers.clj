@@ -11,7 +11,12 @@
 (defn builds-path [& args]
   (join "/" [(apply job-path args) "builds"]))
 
+(defn builds-url [job-name]
+  (builds-path base-uri job-name))
+
 (defn build-url [job-name build-name]
   (join "/" [(builds-path base-uri job-name) build-name]))
 
+(defn build-failure-url [job-name build-name]
+  (join "/" [(builds-path base-uri job-name) build-name "failure"]))
 
