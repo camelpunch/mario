@@ -19,13 +19,13 @@
 (expect nil (job "nonexistent"))
 
 ;; can add a build to a job
-(expect {:build/name 1}
+(expect {:build/index 1}
         (let [uuid (first (job-uuids))]
           (build-started uuid)
           (first (:job/builds (job uuid)))))
 
 ;; can notify about build status and retrieve the status from single job
-(expect {:build/name 1
+(expect {:build/index 1
          :build/result "some-status"}
         (let [uuid (first (job-uuids))
               build-id (str (build-started uuid))]
@@ -33,13 +33,13 @@
           (last (:job/builds (job uuid)))))
 
 ;; or from all jobs
-(expect "failure"
-        (let [uuid (first (job-uuids))
-              build-id (build-started uuid)]
-          (build-status uuid build-id "failure")
-          (:build/result (first (:job/builds
-                                  (first
-                                    (filter #(= uuid (:job/name %)) (all-jobs))))))))
+(expect {:build/result "failure"}
+        (in (let [uuid (first (job-uuids))
+                  build-id (build-started uuid)]
+              (build-status uuid build-id "failure")
+              (first (:job/builds
+                       (first
+                         (filter #(= uuid (:job/name %)) (all-jobs))))))))
 
 ;; we get nil when changing status of a non-existent job
 (expect nil (build-status "nonexistentjob" 0 "great-status"))

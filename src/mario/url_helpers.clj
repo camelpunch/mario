@@ -14,9 +14,9 @@
 (defn builds-url [job-name]
   (builds-path base-uri job-name))
 
-(defn build-url [job-name build-name]
-  (join "/" [(builds-path base-uri job-name) build-name]))
+(defn build-url [job-name build-index]
+  (join "/" [(builds-path base-uri job-name) build-index]))
 
-(defn build-failure-url [job-name build-name]
-  (join "/" [(builds-path base-uri job-name) build-name "failure"]))
+(defn build-failure-url [job-name build-index]
+  (join "/" [(builds-path base-uri job-name) build-index "failure"]))
 
