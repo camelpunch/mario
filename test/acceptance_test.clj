@@ -3,7 +3,7 @@
             [ring.mock.request :as r]
             [test-helpers :as t]
             [clojure.string :as s]
-            [mario.url-helpers :as u]
+            [mario.url-helpers :refer :all]
             [mario.routes :refer [app]]))
 
 (defn- GET [path] (app (r/request :get path)))
@@ -19,64 +19,64 @@
 ;; shows created jobs in the feed
 (expect {:activity "Sleeping"
          :lastBuildStatus "Unknown"}
-        (in (let [job-name (doto (t/uuid) (#(PUT (u/job-path %))))]
+        (in (let [job-name (doto (t/uuid) (#(PUT (job-url %))))]
               (t/project-status (projects) job-name))))
 
 ;; creating a job 204s
-(expect {:status 204} (in (PUT (u/job-path (t/uuid)))))
+(expect {:status 204} (in (PUT (job-url (t/uuid)))))
 
 ;; triggering a build
 (expect {:status 201}
-        (in (POST (u/builds-path (doto (t/uuid) (#(PUT (u/job-path %))))))))
+        (in (POST (builds-path (doto (t/uuid) (#(PUT (job-url %))))))))
 
 (expect {:activity "Building"
          :lastBuildStatus "Unknown"}
         (in (let [job-name (t/uuid)]
-              (PUT (u/job-path job-name))
-              (POST (u/builds-path job-name))
+              (PUT (job-url job-name))
+              (POST (builds-url job-name))
               (t/project-status (projects) job-name))))
 
 ;; failing a build
 (expect {:status 204}
         (in (let [job-name (doto (t/uuid)
-                             (#(PUT (u/job-path %))))
+                             (#(PUT (job-url %))))
                   build-url (location-from-response
-                              (POST (u/builds-path job-name)))]
+                              (POST (builds-url job-name)))]
               (PUT (str build-url "/failure")))))
 
 (expect {:activity "Sleeping"
          :lastBuildStatus "Failure"}
-        (in (let [job-name (doto (t/uuid) (#(PUT (u/job-path %))))
+        (in (let [job-name (doto (t/uuid) (#(PUT (job-url %))))
                   build-url (location-from-response
-                              (POST (u/builds-path job-name)))]
+                              (POST (builds-url job-name)))]
               (PUT (str build-url "/failure"))
               (t/project-status (projects) job-name))))
 
 ;; making a build succeed
 (expect {:status 204}
         (in (let [job-name (doto (t/uuid)
-                             (#(PUT (u/job-path %))))
+                             (#(PUT (job-url %))))
                   build-url (location-from-response
-                              (POST (u/builds-path job-name)))]
+                              (POST (builds-url job-name)))]
               (PUT (str build-url "/success")))))
 
 ;; a new build for a job can succeed after a previous fail
 (expect {:activity "Sleeping"
          :lastBuildStatus "Success"}
-        (in (let [job-name (doto (t/uuid) (#(PUT (u/job-path %))))
+        (in (let [job-name (doto (t/uuid) (#(PUT (job-url %))))
                   build-url (location-from-response
-                              (POST (u/builds-path job-name)))]
+                              (POST (builds-url job-name)))]
               (PUT (str build-url "/failure"))
               (PUT (str build-url "/success"))
               (t/project-status (projects) job-name))))
 
 ;; building a non-existent job 404s
-(expect {:status 404} (in (POST (u/builds-url "poopants"))))
+(expect {:status 404} (in (POST (builds-url "poopants"))))
 
 ;; failing a non-existent job 404s
-(expect {:status 404} (in (PUT (u/build-failure-url "poopants" 1))))
+(expect {:status 404} (in (PUT (build-failure-url "poopants" 1))))
 
 ;; failing a non-existent build 404s
 (expect {:status 404}
-        (in (let [job-name (doto (t/uuid) (#(PUT (u/job-path %))))]
-              (PUT (u/build-failure-url job-name 999)))))
+        (in (let [job-name (doto (t/uuid) (#(PUT (job-url %))))]
+              (PUT (build-failure-url job-name 999)))))
