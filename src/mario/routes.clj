@@ -1,7 +1,10 @@
 (ns mario.routes
   (:require [compojure.core :refer :all]
+            [compojure.handler :refer [site]]
             [compojure.handler :as handler]
             [compojure.route :as route]
+            [ring.adapter.jetty :as jetty]
+            [environ.core :refer [env]]
             [mario.actions :as actions]))
 
 (defroutes app-routes
@@ -25,3 +28,7 @@
   (route/not-found "Not Found"))
 
 (def app (handler/site app-routes))
+
+(defn -main [& [port]]
+  (jetty/run-jetty (-> #'app-routes (site {}))
+                   {:port (Integer. (env :port)) :join? false}))

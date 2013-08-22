@@ -2,7 +2,10 @@
   (:require [environ.core :refer [env]]
             [taoensso.carmine :as car :refer [wcar]]))
 
-(def server1-conn {:pool {} :spec (env :redis)})
+(def server1-conn {:pool {}
+                   :spec (if-let [uri (env :redistogo-url)]
+                           {:uri uri}
+                           (env :redis))})
 (defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
 
 (defn wipe [] (wcar* (car/flushdb)))
