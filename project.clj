@@ -12,8 +12,8 @@
             [lein-environ "0.4.0"]]
   :ring {:handler mario.routes/app}
   :profiles {:dev {:env {:site-base-uri "http://localhost:3000"
-                         :redis {:host "localhost" :port 6379}}}
+                         :redis {:host "localhost" :port 6379 :db 1}}}
              :test {:env {:site-base-uri "http://localhost:3000"
-                          :redis {:host "localhost" :port 6379}}
+                          :redis {:host "localhost" :port 6379 :db 2}}
                     :dependencies [[ring-mock "0.1.5"]
                                    [expectations "1.4.38"]]}})
