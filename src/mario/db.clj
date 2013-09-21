@@ -2,6 +2,7 @@
   (:require [environ.core :refer [env]]
             [taoensso.carmine :as car :refer [wcar]]))
 
+;; Heroku defines redistogo-url
 (def server1-conn {:pool {}
                    :spec (if-let [uri (env :redistogo-url)]
                            {:uri uri}
@@ -10,9 +11,10 @@
 
 (defn wipe [] (wcar* (car/flushdb)))
 
-(defn add-job [job-name]
+(defn add-job [job-name & [script]]
   (wcar* (car/hmset "jobs" job-name {:job/name job-name
-                                     :job/builds []})))
+                                     :job/builds []
+                                     :job/script (or script "true")})))
 
 (defn job [job-name]
   "Returns a job by name"

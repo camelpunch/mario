@@ -7,13 +7,21 @@
 
 (defn job-uuids [] (repeat (doto (t/uuid) add-job)))
 
-;; naming allows finding
+;; naming without a script allows finding, with no-op script
 (expect-let [uuid (first (job-uuids))]
-            uuid (:job/name (job uuid)))
+            {:job/name uuid
+             :job/script "true"}
+            (in (job uuid)))
 
 ;; and finding all
 (expect-let [uuid (first (job-uuids))]
             uuid (in (seq (map :job/name (all-jobs)))))
+
+;; can store script against a job name
+(expect "my awesome script"
+        (let [uuid (t/uuid)]
+          (add-job uuid "my awesome script")
+          (:job/script (job uuid))))
 
 ;; we get nil when finding a name that doesn't exist
 (expect nil (job "nonexistent"))

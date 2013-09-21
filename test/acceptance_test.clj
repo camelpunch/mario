@@ -25,16 +25,25 @@
 ;; creating a job 204s
 (expect {:status 204} (in (PUT (job-url (t/uuid)))))
 
-;; triggering a build
+;; triggering a build 201s
 (expect {:status 201}
         (in (POST (builds-path (doto (t/uuid) (#(PUT (job-url %))))))))
 
+;; and updates the status in the feed
 (expect {:activity "Building"
          :lastBuildStatus "Unknown"}
         (in (let [job-name (t/uuid)]
               (PUT (job-url job-name))
               (POST (builds-url job-name))
               (t/project-status (projects) job-name))))
+
+;; and actually causes the build to run
+(expect "proof I ran"
+        (let [job-name (t/uuid)
+              temp-path (str "/tmp/mario-proof-" job-name)]
+          (PUT (job-url job-name) {:script (str "sh -c \"echo 'proof I ran' > " temp-path "\"")})
+          (POST (builds-url job-name))
+          (slurp temp-path)))
 
 ;; failing a build
 (expect {:status 204}

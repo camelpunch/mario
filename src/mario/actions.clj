@@ -1,16 +1,21 @@
 (ns mario.actions
-  (:require [mario.views :as views]
+  (:require [clojure.java.shell :refer [sh]]
+            [mario.views :as views]
             [mario.url-helpers :as u]
             [mario.db :as db]))
 
 (defn cctray [] {:status 200
                  :body (views/cctray (db/all-jobs))})
 
-(defn create-job [job-name] (db/add-job job-name) {:status 204})
+(defn create-job [job-name body]
+  (let [script (:script body)]
+    (db/add-job job-name script)
+    {:status 204}))
 
 (defn build [job-name]
   (if-let [job (db/job job-name)]
     (let [build-index (db/build-started job-name)]
+      (.. Runtime getRuntime (exec (:job/script job)))
       {:status 201
        :headers {"Location" (u/build-url job-name build-index)}})
     {:status 404}))

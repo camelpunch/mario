@@ -11,7 +11,7 @@
   (GET "/" [] (actions/cctray))
   (GET "/cc.xml" [] (actions/cctray))
 
-  (PUT "/jobs/:job-name" [job-name] (actions/create-job job-name))
+  (PUT "/jobs/:job-name" [job-name & body] (actions/create-job job-name body))
 
   (POST "/jobs/:job-name/builds"
         [job-name]
