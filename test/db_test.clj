@@ -7,14 +7,18 @@
 
 (defn job-uuids [] (repeat (doto (t/uuid) add-job)))
 
-;; naming without a script allows finding, with no-op script
-(expect-let [uuid (first (job-uuids))]
-            {:name uuid :script "true"}
-            (in (job uuid)))
+;; job without name can be retrieved
+;; - defaults to a no-op script
+;; - has no builds
+(expect-let [job-name (first (job-uuids))]
+            {:name job-name
+             :script "true"
+             :builds []}
+            (job job-name))
 
 ;; and finding all
-(expect-let [uuid (first (job-uuids))]
-            uuid (in (seq (map :name (all-jobs)))))
+(expect-let [job-name (first (job-uuids))]
+            job-name (in (seq (map :name (all-jobs)))))
 
 ;; can store script against a job name
 (expect "my awesome script"

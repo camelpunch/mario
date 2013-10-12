@@ -23,18 +23,18 @@
 (defn all-jobs []
   (take-nth 2 (next (wcar* (car/hgetall "jobs")))))
 
-(defn- next-id-for [key] (wcar* (car/incr (str "id." key))))
+(defn- next-id-for [id-key] (wcar* (car/incr (str "id." id-key))))
 
 (defn build-started [job-name]
   (let [job (job job-name)]
     (wcar*
-      (car/hmset "jobs" job-name (merge job {:builds [{:index 1}]})))
+      (car/hmset "jobs" job-name (assoc job :builds [{:index 1}])))
     1))
 
 (defn build-status [job-name build status]
   (if-let [job (job job-name)]
     (if (>= (count (:builds job)) (Integer. build))
       (wcar*
-        (car/hmset "jobs" job-name (merge job {:builds [{:index 1
-                                                         :result status}]}))))))
+        (car/hmset "jobs" job-name (assoc job :builds [{:index 1
+                                                        :result status}]))))))
 

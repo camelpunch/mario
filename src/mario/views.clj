@@ -3,13 +3,13 @@
             [hiccup.page :refer [xml-declaration]]
             [clojure.string :refer [capitalize]]))
 
-(defn- result-of [builds] (:result (first builds)))
+(defn- result [builds] (:result (first builds)))
 (defn- activity [builds]
-  (if (or (empty? builds) (result-of builds))
+  (if (or (empty? builds) (result builds))
     "Sleeping"
     "Building"))
 (defn- last-build-status [builds]
-  (capitalize (or (result-of builds) "unknown")))
+  (capitalize (or (result builds) "unknown")))
 
 (defn- ccproject [job]
   [:Project {:name (:name job)
