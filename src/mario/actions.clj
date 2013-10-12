@@ -17,7 +17,7 @@
     (let [build-index (db/build-started job-name)
           script-path (str "/tmp/" (java.util.UUID/randomUUID))]
 
-      (spit script-path (:job/script job))
+      (spit script-path (:script job))
       (.setExecutable (java.io.File. script-path) true)
       (sh script-path)
 

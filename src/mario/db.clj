@@ -12,9 +12,9 @@
 (defn wipe [] (wcar* (car/flushdb)))
 
 (defn add-job [job-name & [script]]
-  (wcar* (car/hmset "jobs" job-name {:job/name job-name
-                                     :job/builds []
-                                     :job/script (or script "true")})))
+  (wcar* (car/hmset "jobs" job-name {:name job-name
+                                     :builds []
+                                     :script (or script "true")})))
 
 (defn job [job-name]
   "Returns a job by name"
@@ -28,13 +28,13 @@
 (defn build-started [job-name]
   (let [job (job job-name)]
     (wcar*
-      (car/hmset "jobs" job-name (merge job {:job/builds [{:build/index 1}]})))
+      (car/hmset "jobs" job-name (merge job {:builds [{:index 1}]})))
     1))
 
 (defn build-status [job-name build status]
   (if-let [job (job job-name)]
-    (if (>= (count (:job/builds job)) (Integer. build))
+    (if (>= (count (:builds job)) (Integer. build))
       (wcar*
-        (car/hmset "jobs" job-name (merge job {:job/builds [{:build/index 1
-                                                             :build/result status}]}))))))
+        (car/hmset "jobs" job-name (merge job {:builds [{:index 1
+                                                         :result status}]}))))))
 

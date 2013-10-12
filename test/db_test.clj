@@ -9,45 +9,43 @@
 
 ;; naming without a script allows finding, with no-op script
 (expect-let [uuid (first (job-uuids))]
-            {:job/name uuid
-             :job/script "true"}
+            {:name uuid :script "true"}
             (in (job uuid)))
 
 ;; and finding all
 (expect-let [uuid (first (job-uuids))]
-            uuid (in (seq (map :job/name (all-jobs)))))
+            uuid (in (seq (map :name (all-jobs)))))
 
 ;; can store script against a job name
 (expect "my awesome script"
         (let [uuid (t/uuid)]
           (add-job uuid "my awesome script")
-          (:job/script (job uuid))))
+          (:script (job uuid))))
 
 ;; we get nil when finding a name that doesn't exist
 (expect nil (job "nonexistent"))
 
 ;; can add a build to a job
-(expect {:build/index 1}
+(expect {:index 1}
         (let [uuid (first (job-uuids))]
           (build-started uuid)
-          (first (:job/builds (job uuid)))))
+          (first (:builds (job uuid)))))
 
 ;; can notify about build status and retrieve the status from single job
-(expect {:build/index 1
-         :build/result "some-status"}
+(expect {:index 1 :result "some-status"}
         (let [uuid (first (job-uuids))
               build-id (str (build-started uuid))]
           (build-status uuid build-id "some-status")
-          (last (:job/builds (job uuid)))))
+          (last (:builds (job uuid)))))
 
 ;; or from all jobs
-(expect {:build/result "failure"}
+(expect {:result "failure"}
         (in (let [uuid (first (job-uuids))
                   build-id (build-started uuid)]
               (build-status uuid build-id "failure")
-              (first (:job/builds
+              (first (:builds
                        (first
-                         (filter #(= uuid (:job/name %)) (all-jobs))))))))
+                         (filter #(= uuid (:name %)) (all-jobs))))))))
 
 ;; we get nil when changing status of a non-existent job
 (expect nil (build-status "nonexistentjob" 0 "great-status"))
