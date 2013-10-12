@@ -14,8 +14,13 @@
 
 (defn build [job-name]
   (if-let [job (db/job job-name)]
-    (let [build-index (db/build-started job-name)]
-      (.. Runtime getRuntime (exec (:job/script job)))
+    (let [build-index (db/build-started job-name)
+          script-path (str "/tmp/" (java.util.UUID/randomUUID))]
+
+      (spit script-path (:job/script job))
+      (.setExecutable (java.io.File. script-path) true)
+      (sh script-path)
+
       {:status 201
        :headers {"Location" (u/build-url job-name build-index)}})
     {:status 404}))

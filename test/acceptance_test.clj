@@ -1,4 +1,5 @@
 (ns acceptance-test
+  (:import [java.io File])
   (:require [expectations :refer :all]
             [ring.mock.request :as r]
             [test-helpers :as t]
@@ -40,10 +41,13 @@
 ;; and actually causes the build to run
 (expect "proof I ran"
         (let [job-name (t/uuid)
-              temp-path (str "/tmp/mario-proof-" job-name)]
-          (PUT (job-url job-name) {:script (str "sh -c \"echo 'proof I ran' > " temp-path "\"")})
+              temp-path (str "/tmp/mario-proof-" job-name)
+              script (str "echo 'proof I ran' > " temp-path)]
+          (PUT (job-url job-name) {:script script})
           (POST (builds-url job-name))
-          (slurp temp-path)))
+          (let [result (clojure.string/trim-newline (slurp temp-path))]
+            (.delete (File. temp-path))
+            result)))
 
 ;; failing a build
 (expect {:status 204}
